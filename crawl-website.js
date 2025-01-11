@@ -2,9 +2,35 @@
 const { JSDOM } = require("jsdom");
 
 
-// @desc: crawl the website
-// @desc: for example: "https://wagslane.dev/"
-async function crawlWebPage(currentURL) {
+// @desc: crawl the website where,
+// baseURL = homepage of the website,
+// currentURL = current page that we're crawling
+// pages = an object that keeps track of all the pages we've tracked so far
+// for example: "https://wagslane.dev/"
+async function crawlWebPage(baseURL, currentURL, pages) {
+
+    const baseURLObject = new URL(baseURL);
+    const currentURLObject = new URL(currentURL);
+
+    // @desc: ignore the URLs pointing towards external sites other than the main host site
+    if (baseURLObject.hostname !== currentURLObject.hostname) {
+        return pages;
+    }
+
+    const normalizedCurrentURL = normalizeURL(currentURL);
+
+    // @desc: if we've already crawled the current URL, then increment the count we've seen this page
+    if (pages[normalizedCurrentURL] > 0) {
+        pages[normalizedCurrentURL]++;
+        return pages;
+    }
+
+    pages[normalizedCurrentURL] = 1;
+
+    console.log(`Actively crawling ${currentURL}...`);
+
+
+
     try {
 
         const resp = await fetch(currentURL);
@@ -12,24 +38,31 @@ async function crawlWebPage(currentURL) {
         //@desc: check for response status code
         if (resp.status > 399) {
             console.error(`Error in fetching the "${currentURL}" URL with the status code: `, resp.status);
-            return;
+            return pages;
         }
 
         // @desc: check for response header to only parse "text/html" body
         const contentType = resp.headers.get("content-type");
         if (!contentType.includes("text/html")) {
             console.error(`Error in fetching the "${currentURL}" URL. Non-HTML response: `, contentType);
-            return;
+            return pages;
         }
 
 
         // @desc: parse text/html response body
-        await resp.text();
+        const htmlBody = await resp.text();
+
+        const nextURLs = getURLs(htmlBody, baseURL);
+        for (let nextURL of nextURLs) {
+            pages = await crawlWebPage(baseURL, nextURL, pages);
+        }
 
     } catch (error) {
         console.error(`Error in fetching the "${currentURL}" URL:`, error.message);
 
     }
+
+    return pages;
 
 }
 

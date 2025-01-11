@@ -2,7 +2,7 @@ const { crawlWebPage } = require("./crawl-website.js");
 
 
 
-function main() {
+async function main() {
 
     // @desc: process.argv[0] = execPath of the environment Node.js
     // @desc: process.argv[1] = filePath of the file index.js
@@ -21,7 +21,12 @@ function main() {
 
     const baseURLInputArg = process.argv[2];
     console.log(`starting crawl on ${baseURLInputArg}`);
-    crawlWebPage(baseURLInputArg);
+
+    const pages = await crawlWebPage(baseURLInputArg, baseURLInputArg, {});
+    for (const page of Object.entries(pages)) {
+        console.log(page);
+    }
+
 }
 
 main();
