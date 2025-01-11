@@ -1,6 +1,40 @@
 // @desc: since we don't have access to the DOM in the node environment
 const { JSDOM } = require("jsdom");
 
+
+// @desc: crawl the website
+// @desc: for example: "https://wagslane.dev/"
+async function crawlWebPage(currentURL) {
+    try {
+
+        const resp = await fetch(currentURL);
+
+        //@desc: check for response status code
+        if (resp.status > 399) {
+            console.error(`Error in fetching the "${currentURL}" URL with the status code: `, resp.status);
+            return;
+        }
+
+        // @desc: check for response header to only parse "text/html" body
+        const contentType = resp.headers.get("content-type");
+        if (!contentType.includes("text/html")) {
+            console.error(`Error in fetching the "${currentURL}" URL. Non-HTML response: `, contentType);
+            return;
+        }
+
+
+        // @desc: parse text/html response body
+        await resp.text();
+
+    } catch (error) {
+        console.error(`Error in fetching the "${currentURL}" URL:`, error.message);
+
+    }
+
+}
+
+
+
 // @desc: get all the URLs present in the given HTML web page and return an array of URL strings
 function getURLs(htmlBody, baseURL) {
     const urls = [];
@@ -68,6 +102,7 @@ function normalizeURL(urlString) {
 
 
 module.exports = {
+    crawlWebPage,
     normalizeURL,
     getURLs
 }
