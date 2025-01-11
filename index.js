@@ -1,4 +1,5 @@
 const { crawlWebPage } = require("./crawl-website.js");
+const { printReport } = require("./seo-report.js");
 
 
 
@@ -23,9 +24,7 @@ async function main() {
     console.log(`starting crawl on ${baseURLInputArg}`);
 
     const pages = await crawlWebPage(baseURLInputArg, baseURLInputArg, {});
-    for (const page of Object.entries(pages)) {
-        console.log(page);
-    }
+    printReport(pages);
 
 }
 
